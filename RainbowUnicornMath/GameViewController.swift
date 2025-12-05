@@ -2,38 +2,34 @@
 //  GameViewController.swift
 //  RainbowUnicornMath
 //
-//  Created by Ronald Cheng on 12/4/25.
-//
 
 import UIKit
 import SpriteKit
-import GameplayKit
 
 class GameViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         if let view = self.view as! SKView? {
-            // Load the SKScene from 'GameScene.sks'
-            if let scene = SKScene(fileNamed: "GameScene") {
-                // Set the scale mode to scale to fit the window
-                scene.scaleMode = .aspectFill
-                
-                // Present the scene
-                view.presentScene(scene)
-            }
-            
+            // Create and configure the menu scene
+            let scene = MenuScene(size: view.bounds.size)
+            scene.scaleMode = .aspectFill
+
+            // Present the scene
+            view.presentScene(scene)
+
             view.ignoresSiblingOrder = true
-            
-            view.showsFPS = true
-            view.showsNodeCount = true
+
+            // Disable debug info for production
+            view.showsFPS = false
+            view.showsNodeCount = false
         }
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         if UIDevice.current.userInterfaceIdiom == .phone {
-            return .allButUpsideDown
+            return .portrait
         } else {
             return .all
         }
