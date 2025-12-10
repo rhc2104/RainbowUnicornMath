@@ -106,13 +106,34 @@ class ResultsScene: SKScene {
         let correct = GameState.shared.correctAnswers
         let total = GameState.shared.totalQuestions
 
+        // Create label first to measure its size
         let scoreLabel = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
         scoreLabel.text = "You got \(correct) out of \(total) correct!"
-        scoreLabel.fontSize = 24
+        scoreLabel.fontSize = 22
         scoreLabel.fontColor = .white
-        scoreLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.40)
-        scoreLabel.zPosition = 10
-        addChild(scoreLabel)
+        scoreLabel.verticalAlignmentMode = .center
+        scoreLabel.horizontalAlignmentMode = .center
+
+        // Calculate background size based on text with fixed padding
+        let horizontalPadding: CGFloat = 24
+        let verticalPadding: CGFloat = 16
+        let textFrame = scoreLabel.frame
+        let bgSize = CGSize(width: textFrame.width + horizontalPadding * 2,
+                            height: textFrame.height + verticalPadding * 2)
+
+        // Background pill shape
+        let scoreBg = SKShapeNode(rectOf: bgSize, cornerRadius: bgSize.height / 2)
+        scoreBg.fillColor = RainbowColors.purple
+        scoreBg.strokeColor = .white
+        scoreBg.lineWidth = 3
+        scoreBg.position = CGPoint(x: size.width / 2, y: size.height * 0.40)
+        scoreBg.zPosition = 10
+        addChild(scoreBg)
+
+        // Add label to background
+        scoreLabel.position = CGPoint.zero
+        scoreLabel.zPosition = 11
+        scoreBg.addChild(scoreLabel)
     }
 
     private func setupPlayAgainButton() {
