@@ -11,6 +11,7 @@ class GameState {
 
     private init() {}
 
+    var selectedLevel: MathLevel = .addSubtract
     var currentQuestion: Int = 0
     var correctAnswers: Int = 0
     let totalQuestions: Int = 15

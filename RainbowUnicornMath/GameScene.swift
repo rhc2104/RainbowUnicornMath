@@ -109,7 +109,7 @@ class GameScene: SKScene {
 
     private func loadNewQuestion() {
         isAnswered = false
-        currentProblem = MathProblem.generate()
+        currentProblem = MathProblem.generate(for: GameState.shared.selectedLevel)
 
         // Update progress
         progressLabel.text = GameState.shared.progressText

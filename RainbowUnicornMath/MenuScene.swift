@@ -8,13 +8,13 @@ import SpriteKit
 class MenuScene: SKScene {
 
     private var unicornLabel: SKLabelNode!
-    private var playButton: SKShapeNode!
+    private var levelButtons: [LevelButton] = []
 
     override func didMove(to view: SKView) {
         setupBackground()
         setupTitle()
         setupUnicorn()
-        setupPlayButton()
+        setupLevelButtons()
         setupDecorations()
     }
 
@@ -26,87 +26,88 @@ class MenuScene: SKScene {
     private func setupTitle() {
         let titleLabel = SKLabelNode(fontNamed: "AvenirNext-Heavy")
         titleLabel.text = "Rainbow Unicorn"
-        titleLabel.fontSize = 42
+        titleLabel.fontSize = 36
         titleLabel.fontColor = .white
-        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.82)
+        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.92)
         titleLabel.zPosition = 10
         addChild(titleLabel)
 
         let subtitleLabel = SKLabelNode(fontNamed: "AvenirNext-Heavy")
         subtitleLabel.text = "Math!"
-        subtitleLabel.fontSize = 48
+        subtitleLabel.fontSize = 42
         subtitleLabel.fontColor = RainbowColors.yellow
-        subtitleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.74)
+        subtitleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.86)
         subtitleLabel.zPosition = 10
         addChild(subtitleLabel)
     }
 
     private func setupUnicorn() {
         unicornLabel = SKLabelNode(text: "🦄")
-        unicornLabel.fontSize = 120
-        unicornLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.52)
+        unicornLabel.fontSize = 70
+        unicornLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.76)
         unicornLabel.zPosition = 10
         addChild(unicornLabel)
 
         // Bobbing animation
-        let moveUp = SKAction.moveBy(x: 0, y: 15, duration: 0.8)
+        let moveUp = SKAction.moveBy(x: 0, y: 10, duration: 0.8)
         moveUp.timingMode = .easeInEaseOut
-        let moveDown = SKAction.moveBy(x: 0, y: -15, duration: 0.8)
+        let moveDown = SKAction.moveBy(x: 0, y: -10, duration: 0.8)
         moveDown.timingMode = .easeInEaseOut
         let bob = SKAction.sequence([moveUp, moveDown])
         unicornLabel.run(SKAction.repeatForever(bob))
     }
 
-    private func setupPlayButton() {
-        let buttonSize = CGSize(width: 200, height: 70)
-        playButton = SKShapeNode(rectOf: buttonSize, cornerRadius: 20)
-        playButton.fillColor = RainbowColors.purple
-        playButton.strokeColor = .white
-        playButton.lineWidth = 4
-        playButton.position = CGPoint(x: size.width / 2, y: size.height * 0.28)
-        playButton.zPosition = 10
-        playButton.name = "playButton"
-        addChild(playButton)
+    private func setupLevelButtons() {
+        let chooseLevelLabel = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
+        chooseLevelLabel.text = "Choose a Level:"
+        chooseLevelLabel.fontSize = 24
+        chooseLevelLabel.fontColor = .white
+        chooseLevelLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.66)
+        chooseLevelLabel.zPosition = 10
+        addChild(chooseLevelLabel)
 
-        let playLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
-        playLabel.text = "Play!"
-        playLabel.fontSize = 36
-        playLabel.fontColor = .white
-        playLabel.verticalAlignmentMode = .center
-        playLabel.horizontalAlignmentMode = .center
-        playLabel.zPosition = 11
-        playButton.addChild(playLabel)
+        let buttonSize = CGSize(width: size.width * 0.75, height: 50)
+        let buttonSpacing: CGFloat = 58
+        let startY = size.height * 0.58
 
-        // Pulse animation
-        let scaleUp = SKAction.scale(to: 1.08, duration: 0.5)
-        scaleUp.timingMode = .easeInEaseOut
-        let scaleDown = SKAction.scale(to: 1.0, duration: 0.5)
-        scaleDown.timingMode = .easeInEaseOut
-        let pulse = SKAction.sequence([scaleUp, scaleDown])
-        playButton.run(SKAction.repeatForever(pulse))
+        let levelColors: [UIColor] = [
+            RainbowColors.red,
+            RainbowColors.orange,
+            RainbowColors.yellow,
+            RainbowColors.green,
+            RainbowColors.blue
+        ]
+
+        for (index, level) in MathLevel.allCases.enumerated() {
+            let button = LevelButton(level: level, size: buttonSize, color: levelColors[index])
+            button.position = CGPoint(x: size.width / 2, y: startY - CGFloat(index) * buttonSpacing)
+            button.zPosition = 10
+            addChild(button)
+            levelButtons.append(button)
+        }
     }
 
     private func setupDecorations() {
         // Rainbow emoji decorations
         let rainbowLeft = SKLabelNode(text: "🌈")
-        rainbowLeft.fontSize = 50
-        rainbowLeft.position = CGPoint(x: size.width * 0.15, y: size.height * 0.12)
+        rainbowLeft.fontSize = 40
+        rainbowLeft.position = CGPoint(x: size.width * 0.15, y: size.height * 0.08)
         rainbowLeft.zPosition = 10
         addChild(rainbowLeft)
 
         let rainbowRight = SKLabelNode(text: "🌈")
-        rainbowRight.fontSize = 50
-        rainbowRight.position = CGPoint(x: size.width * 0.85, y: size.height * 0.12)
+        rainbowRight.fontSize = 40
+        rainbowRight.position = CGPoint(x: size.width * 0.85, y: size.height * 0.08)
         rainbowRight.zPosition = 10
         addChild(rainbowRight)
 
-        // Stars
+        // Stars on the sides
         let positions: [(CGFloat, CGFloat)] = [
-            (0.1, 0.9), (0.9, 0.88), (0.15, 0.65), (0.85, 0.62), (0.08, 0.4), (0.92, 0.38)
+            (0.08, 0.95), (0.92, 0.93), (0.05, 0.45), (0.95, 0.42)
         ]
         for (xRatio, yRatio) in positions {
             let star = SKLabelNode(text: "⭐")
-            star.fontSize = CGFloat.random(in: 20...35)
+            star.fontSize = CGFloat.random(in: 18...28)
             star.position = CGPoint(x: size.width * xRatio, y: size.height * yRatio)
             star.zPosition = 5
             star.alpha = 0.8
@@ -123,18 +124,18 @@ class MenuScene: SKScene {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
         let location = touch.location(in: self)
-        let nodesAtPoint = nodes(at: location)
 
-        for node in nodesAtPoint {
-            if node.name == "playButton" || node.parent?.name == "playButton" {
-                startGame()
+        for button in levelButtons {
+            if button.calculateAccumulatedFrame().contains(location) {
+                startGame(with: button.level)
                 return
             }
         }
     }
 
-    private func startGame() {
+    private func startGame(with level: MathLevel) {
         GameState.shared.reset()
+        GameState.shared.selectedLevel = level
 
         let gameScene = GameScene(size: self.size)
         gameScene.scaleMode = self.scaleMode
