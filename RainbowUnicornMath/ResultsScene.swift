@@ -75,7 +75,7 @@ class ResultsScene: SKScene {
         let starsEarned = GameState.shared.starsEarned
         let starSpacing: CGFloat = 55
         let totalWidth = starSpacing * 4
-        let startX = (size.width - totalWidth) / 2 + starSpacing / 2
+        let startX = (size.width - totalWidth) / 2
 
         for i in 0..<5 {
             let starLabel = SKLabelNode()
