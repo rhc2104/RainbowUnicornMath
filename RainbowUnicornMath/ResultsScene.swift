@@ -28,11 +28,11 @@ class ResultsScene: SKScene {
         let starsEarned = GameState.shared.starsEarned
 
         let titleLabel = SKLabelNode(fontNamed: "AvenirNext-Heavy")
-        if starsEarned >= 4 {
+        if starsEarned >= 5 {
             titleLabel.text = "Amazing!"
-        } else if starsEarned >= 3 {
+        } else if starsEarned >= 4 {
             titleLabel.text = "Great Job!"
-        } else if starsEarned >= 2 {
+        } else if starsEarned >= 3 {
             titleLabel.text = "Good Try!"
         } else {
             titleLabel.text = "Keep Practicing!"
