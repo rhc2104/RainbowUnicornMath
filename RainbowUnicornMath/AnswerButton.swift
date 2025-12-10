@@ -32,7 +32,6 @@ class AnswerButton: SKNode {
 
         super.init()
 
-        self.isUserInteractionEnabled = true
         self.addChild(background)
         self.addChild(label)
     }
@@ -59,9 +58,5 @@ class AnswerButton: SKNode {
     func highlightCorrect() {
         background.fillColor = RainbowColors.green
         background.lineWidth = 5
-    }
-
-    func disable() {
-        self.isUserInteractionEnabled = false
     }
 }

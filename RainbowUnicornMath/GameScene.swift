@@ -158,7 +158,7 @@ class GameScene: SKScene {
         let location = touch.location(in: self)
 
         for button in answerButtons {
-            if button.contains(location) {
+            if button.calculateAccumulatedFrame().contains(location) {
                 handleAnswer(selectedButton: button)
                 return
             }
@@ -167,11 +167,6 @@ class GameScene: SKScene {
 
     private func handleAnswer(selectedButton: AnswerButton) {
         isAnswered = true
-
-        // Disable all buttons
-        for button in answerButtons {
-            button.disable()
-        }
 
         let isCorrect = selectedButton.value == currentProblem.correctAnswer
         GameState.shared.recordAnswer(correct: isCorrect)

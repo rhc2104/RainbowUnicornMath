@@ -21,12 +21,14 @@ class GameState {
             return 1
         case 4...6:
             return 2
-        case 7...9:
+        case 7...10:
             return 3
-        case 10...12:
+        case 11...14:
             return 4
-        default:
+        case 15:
             return 5
+        default:
+            return 1
         }
     }
 
