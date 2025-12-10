@@ -20,11 +20,11 @@ class GameState {
         switch correctAnswers {
         case 0...3:
             return 1
-        case 4...6:
+        case 4...7:
             return 2
-        case 7...10:
+        case 8...11:
             return 3
-        case 11...14:
+        case 12...14:
             return 4
         case 15:
             return 5
