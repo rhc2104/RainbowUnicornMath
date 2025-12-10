@@ -5,8 +5,11 @@
 
 import Foundation
 
+@MainActor
 class GameState {
     static let shared = GameState()
+
+    private init() {}
 
     var currentQuestion: Int = 0
     var correctAnswers: Int = 0

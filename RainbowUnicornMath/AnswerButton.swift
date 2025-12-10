@@ -5,6 +5,7 @@
 
 import SpriteKit
 
+@MainActor
 class AnswerButton: SKNode {
     let value: Int
     private let background: SKShapeNode
