@@ -25,7 +25,7 @@ enum MathLevel: Int, CaseIterable {
     var symbol: String {
         switch self {
         case .addition: return "+"
-        case .subtraction: return "-"
+        case .subtraction: return "−"  // U+2212 mathematical minus (same width as +)
         case .addSubtract: return "±"
         case .multiplication: return "×"
         case .division: return "÷"
