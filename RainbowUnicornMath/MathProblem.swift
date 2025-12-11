@@ -56,7 +56,55 @@ struct MathProblem {
         }
     }
 
-    static func generate(for level: MathLevel) -> MathProblem {
+    /// Unique key for this problem. For commutative operations, normalizes order.
+    var uniqueKey: String {
+        switch level {
+        case .addition:
+            // Commutative: normalize so smaller number comes first
+            let sorted = [a, b].sorted()
+            return "add_\(sorted[0])_\(sorted[1])"
+        case .subtraction:
+            return "sub_\(a)_\(b)"
+        case .addSubtract:
+            return "addsub_\(a)_\(b)_\(c!)"
+        case .multiplication:
+            // Commutative: normalize so smaller number comes first
+            let sorted = [a, b].sorted()
+            return "mul_\(sorted[0])_\(sorted[1])"
+        case .division:
+            return "div_\(a)_\(b)"
+        }
+    }
+
+    static func generate(for level: MathLevel, usedProblems: inout Set<String>) -> MathProblem {
+        var attempts = 0
+        let maxAttempts = 100
+
+        while attempts < maxAttempts {
+            let problem: MathProblem
+            switch level {
+            case .addition:
+                problem = generateAddition()
+            case .subtraction:
+                problem = generateSubtraction()
+            case .addSubtract:
+                problem = generateAddSubtract()
+            case .multiplication:
+                problem = generateMultiplication()
+            case .division:
+                problem = generateDivision()
+            }
+
+            if !usedProblems.contains(problem.uniqueKey) {
+                usedProblems.insert(problem.uniqueKey)
+                return problem
+            }
+
+            attempts += 1
+        }
+
+        // Fallback: return any problem if we can't find a unique one
+        // (shouldn't happen with 15 questions and large problem space)
         switch level {
         case .addition:
             return generateAddition()
@@ -141,7 +189,7 @@ struct MathProblem {
 
     private static func generateWrongAnswers(correct: Int, range: ClosedRange<Int>) -> [Int] {
         var wrong: [Int] = []
-        var offsets = Array(range).filter { abs($0) >= 3 }.shuffled()
+        let offsets = Array(range).filter { abs($0) >= 3 }.shuffled()
 
         for offset in offsets where wrong.count < 2 {
             let candidate = correct + offset

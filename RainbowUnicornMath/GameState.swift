@@ -15,6 +15,7 @@ class GameState {
     var currentQuestion: Int = 0
     var correctAnswers: Int = 0
     let totalQuestions: Int = 15
+    var usedProblems: Set<String> = []
 
     var starsEarned: Int {
         switch correctAnswers {
@@ -44,6 +45,7 @@ class GameState {
     func reset() {
         currentQuestion = 0
         correctAnswers = 0
+        usedProblems.removeAll()
     }
 
     func recordAnswer(correct: Bool) {
