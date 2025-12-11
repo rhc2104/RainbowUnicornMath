@@ -28,7 +28,7 @@ class MenuScene: SKScene {
         titleLabel.text = "Rainbow Unicorn"
         titleLabel.fontSize = 36
         titleLabel.fontColor = .white
-        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.92)
+        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.85)
         titleLabel.zPosition = 10
         addChild(titleLabel)
 
@@ -36,7 +36,7 @@ class MenuScene: SKScene {
         subtitleLabel.text = "Math!"
         subtitleLabel.fontSize = 42
         subtitleLabel.fontColor = RainbowColors.yellow
-        subtitleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.86)
+        subtitleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.79)
         subtitleLabel.zPosition = 10
         addChild(subtitleLabel)
     }
@@ -44,7 +44,7 @@ class MenuScene: SKScene {
     private func setupUnicorn() {
         unicornLabel = SKLabelNode(text: "🦄")
         unicornLabel.fontSize = 70
-        unicornLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.76)
+        unicornLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.70)
         unicornLabel.zPosition = 10
         addChild(unicornLabel)
 
