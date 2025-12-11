@@ -10,6 +10,7 @@ class GameScene: SKScene {
     private var progressLabel: SKLabelNode!
     private var unicornLabel: SKLabelNode!
     private var questionLabel: SKLabelNode!
+    private var questionBg: SKShapeNode!
     private var answerButtons: [AnswerButton] = []
     private var currentProblem: MathProblem!
     private var isAnswered = false
@@ -33,7 +34,8 @@ class GameScene: SKScene {
         progressLabel = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
         progressLabel.fontSize = 22
         progressLabel.fontColor = .white
-        progressLabel.position = CGPoint(x: size.width * 0.35, y: size.height * 0.92)
+        // Fixed offset from top
+        progressLabel.position = CGPoint(x: size.width * 0.35, y: size.height - 90)
         progressLabel.horizontalAlignmentMode = .center
         progressLabel.zPosition = 10
         addChild(progressLabel)
@@ -42,7 +44,8 @@ class GameScene: SKScene {
     private func setupUnicorn() {
         unicornLabel = SKLabelNode(text: "🦄")
         unicornLabel.fontSize = 60
-        unicornLabel.position = CGPoint(x: size.width * 0.85, y: size.height * 0.90)
+        // Fixed offset from top
+        unicornLabel.position = CGPoint(x: size.width * 0.85, y: size.height - 100)
         unicornLabel.zPosition = 10
         addChild(unicornLabel)
 
@@ -56,19 +59,20 @@ class GameScene: SKScene {
     }
 
     private func setupQuestionArea() {
-        // Question background
-        let questionBg = SKShapeNode(rectOf: CGSize(width: size.width * 0.85, height: 100), cornerRadius: 20)
+        // Question background - centered vertically
+        let bgWidth = min(size.width * 0.85, 400)
+        questionBg = SKShapeNode(rectOf: CGSize(width: bgWidth, height: 100), cornerRadius: 20)
         questionBg.fillColor = UIColor.white.withAlphaComponent(0.25)
         questionBg.strokeColor = .white
         questionBg.lineWidth = 3
-        questionBg.position = CGPoint(x: size.width / 2, y: size.height * 0.68)
+        questionBg.position = CGPoint(x: size.width / 2, y: size.height / 2 + 40)
         questionBg.zPosition = 5
         addChild(questionBg)
 
         questionLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
         questionLabel.fontSize = 44
         questionLabel.fontColor = .white
-        questionLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.68)
+        questionLabel.position = CGPoint(x: size.width / 2, y: size.height / 2 + 40)
         questionLabel.verticalAlignmentMode = .center
         questionLabel.horizontalAlignmentMode = .center
         questionLabel.zPosition = 10
@@ -81,10 +85,12 @@ class GameScene: SKScene {
         let spacing: CGFloat = 20
         let totalWidth = (buttonWidth * 3) + (spacing * 2)
         let startX = (size.width - totalWidth) / 2 + buttonWidth / 2
+        // Fixed offset from bottom
+        let buttonY = max(size.height / 2 - 80, 120)
 
         for i in 0..<3 {
             let button = AnswerButton(value: 0, size: CGSize(width: buttonWidth, height: 80), color: buttonColors[i])
-            button.position = CGPoint(x: startX + CGFloat(i) * (buttonWidth + spacing), y: size.height * 0.42)
+            button.position = CGPoint(x: startX + CGFloat(i) * (buttonWidth + spacing), y: buttonY)
             button.zPosition = 10
             button.name = "answerButton_\(i)"
             addChild(button)
@@ -94,14 +100,14 @@ class GameScene: SKScene {
 
     private func setupDecorations() {
         // Rainbow decoration at bottom
-        let rainbowRow = SKNode()
         let rainbows = ["🌈", "🌈", "🌈", "🌈", "🌈"]
         let spacing: CGFloat = size.width / CGFloat(rainbows.count + 1)
 
         for (i, emoji) in rainbows.enumerated() {
             let rainbow = SKLabelNode(text: emoji)
             rainbow.fontSize = 40
-            rainbow.position = CGPoint(x: spacing * CGFloat(i + 1), y: size.height * 0.12)
+            // Fixed offset from bottom
+            rainbow.position = CGPoint(x: spacing * CGFloat(i + 1), y: 40)
             rainbow.zPosition = 10
             addChild(rainbow)
         }
@@ -120,7 +126,7 @@ class GameScene: SKScene {
 
         // Update answer buttons
         let buttonColors = [RainbowColors.blue, RainbowColors.purple, RainbowColors.pink]
-        for (i, button) in answerButtons.enumerated() {
+        for button in answerButtons {
             button.removeFromParent()
         }
         answerButtons.removeAll()
@@ -129,12 +135,13 @@ class GameScene: SKScene {
         let spacing: CGFloat = 20
         let totalWidth = (buttonWidth * 3) + (spacing * 2)
         let startX = (size.width - totalWidth) / 2 + buttonWidth / 2
+        let buttonY = max(size.height / 2 - 80, 120)
 
         for i in 0..<3 {
             let button = AnswerButton(value: currentProblem.choices[i],
                                        size: CGSize(width: buttonWidth, height: 80),
                                        color: buttonColors[i])
-            button.position = CGPoint(x: startX + CGFloat(i) * (buttonWidth + spacing), y: size.height * 0.42)
+            button.position = CGPoint(x: startX + CGFloat(i) * (buttonWidth + spacing), y: buttonY)
             button.zPosition = 10
             button.name = "answerButton_\(i)"
             addChild(button)
@@ -242,7 +249,7 @@ class GameScene: SKScene {
 
     private func showResults() {
         let resultsScene = ResultsScene(size: self.size)
-        resultsScene.scaleMode = self.scaleMode
+        resultsScene.scaleMode = .resizeFill
         let transition = SKTransition.fade(withDuration: 0.5)
         self.view?.presentScene(resultsScene, transition: transition)
     }

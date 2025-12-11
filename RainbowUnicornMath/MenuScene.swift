@@ -28,7 +28,8 @@ class MenuScene: SKScene {
         titleLabel.text = "Rainbow Unicorn"
         titleLabel.fontSize = 36
         titleLabel.fontColor = .white
-        titleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.85)
+        // Fixed offset from top
+        titleLabel.position = CGPoint(x: size.width / 2, y: size.height - 90)
         titleLabel.zPosition = 10
         addChild(titleLabel)
 
@@ -36,15 +37,15 @@ class MenuScene: SKScene {
         subtitleLabel.text = "Math!"
         subtitleLabel.fontSize = 42
         subtitleLabel.fontColor = RainbowColors.yellow
-        subtitleLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.79)
+        subtitleLabel.position = CGPoint(x: size.width / 2, y: size.height - 135)
         subtitleLabel.zPosition = 10
         addChild(subtitleLabel)
     }
 
     private func setupUnicorn() {
         unicornLabel = SKLabelNode(text: "🦄")
-        unicornLabel.fontSize = 70
-        unicornLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.70)
+        unicornLabel.fontSize = 60
+        unicornLabel.position = CGPoint(x: size.width / 2, y: size.height - 200)
         unicornLabel.zPosition = 10
         addChild(unicornLabel)
 
@@ -60,15 +61,17 @@ class MenuScene: SKScene {
     private func setupLevelButtons() {
         let chooseLevelLabel = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
         chooseLevelLabel.text = "Choose a Level:"
-        chooseLevelLabel.fontSize = 24
+        chooseLevelLabel.fontSize = 20
         chooseLevelLabel.fontColor = .white
-        chooseLevelLabel.position = CGPoint(x: size.width / 2, y: size.height * 0.66)
+        chooseLevelLabel.position = CGPoint(x: size.width / 2, y: size.height - 250)
         chooseLevelLabel.zPosition = 10
         addChild(chooseLevelLabel)
 
-        let buttonSize = CGSize(width: size.width * 0.75, height: 50)
-        let buttonSpacing: CGFloat = 58
-        let startY = size.height * 0.58
+        // Adaptive button size and spacing
+        let buttonWidth = min(size.width * 0.75, 300)
+        let buttonHeight: CGFloat = 44
+        let buttonSpacing: CGFloat = 50
+        let startY = size.height - 290
 
         let levelColors: [UIColor] = [
             RainbowColors.red,
@@ -79,7 +82,7 @@ class MenuScene: SKScene {
         ]
 
         for (index, level) in MathLevel.allCases.enumerated() {
-            let button = LevelButton(level: level, size: buttonSize, color: levelColors[index])
+            let button = LevelButton(level: level, size: CGSize(width: buttonWidth, height: buttonHeight), color: levelColors[index])
             button.position = CGPoint(x: size.width / 2, y: startY - CGFloat(index) * buttonSpacing)
             button.zPosition = 10
             addChild(button)
@@ -88,22 +91,22 @@ class MenuScene: SKScene {
     }
 
     private func setupDecorations() {
-        // Rainbow emoji decorations
+        // Rainbow emoji decorations at bottom
         let rainbowLeft = SKLabelNode(text: "🌈")
         rainbowLeft.fontSize = 40
-        rainbowLeft.position = CGPoint(x: size.width * 0.15, y: size.height * 0.08)
+        rainbowLeft.position = CGPoint(x: size.width * 0.15, y: 30)
         rainbowLeft.zPosition = 10
         addChild(rainbowLeft)
 
         let rainbowRight = SKLabelNode(text: "🌈")
         rainbowRight.fontSize = 40
-        rainbowRight.position = CGPoint(x: size.width * 0.85, y: size.height * 0.08)
+        rainbowRight.position = CGPoint(x: size.width * 0.85, y: 30)
         rainbowRight.zPosition = 10
         addChild(rainbowRight)
 
         // Stars on the sides
         let positions: [(CGFloat, CGFloat)] = [
-            (0.08, 0.95), (0.92, 0.93), (0.05, 0.45), (0.95, 0.42)
+            (0.08, 0.88), (0.92, 0.86), (0.05, 0.45), (0.95, 0.42)
         ]
         for (xRatio, yRatio) in positions {
             let star = SKLabelNode(text: "⭐")
@@ -138,7 +141,7 @@ class MenuScene: SKScene {
         GameState.shared.selectedLevel = level
 
         let gameScene = GameScene(size: self.size)
-        gameScene.scaleMode = self.scaleMode
+        gameScene.scaleMode = .resizeFill
         let transition = SKTransition.fade(withDuration: 0.5)
         self.view?.presentScene(gameScene, transition: transition)
     }
