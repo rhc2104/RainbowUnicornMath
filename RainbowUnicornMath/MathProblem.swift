@@ -149,7 +149,9 @@ struct MathProblem {
     private static func generateAddSubtract() -> MathProblem {
         let a = Int.random(in: 0...9)
         let b = Int.random(in: 0...9)
-        let c = Int.random(in: 0...9)
+        // Ensure c <= a + b so the answer is non-negative
+        let maxC = a + b
+        let c = maxC > 0 ? Int.random(in: 0...maxC) : 0
         let correct = a + b - c
 
         let wrongAnswers = generateWrongAnswers(correct: correct, range: -9...9)
@@ -193,21 +195,21 @@ struct MathProblem {
 
         for offset in offsets where wrong.count < 2 {
             let candidate = correct + offset
-            // Ensure at least 3 apart from correct and all other wrong answers
+            // Ensure candidate is non-negative and at least 3 apart from correct and all other wrong answers
             let validSpacing = wrong.allSatisfy { abs($0 - candidate) >= 3 }
-            if validSpacing {
+            if candidate >= 0 && validSpacing {
                 wrong.append(candidate)
             }
         }
 
-        // Fallback if we couldn't find 2 wrong answers
+        // Fallback if we couldn't find 2 wrong answers with non-negative values
+        var fallbackOffset = 3
         while wrong.count < 2 {
-            let candidate = correct + (wrong.count == 0 ? 5 : -5)
-            if !wrong.contains(candidate) && wrong.allSatisfy({ abs($0 - candidate) >= 3 }) {
+            let candidate = correct + fallbackOffset
+            if candidate >= 0 && !wrong.contains(candidate) && wrong.allSatisfy({ abs($0 - candidate) >= 3 }) {
                 wrong.append(candidate)
-            } else {
-                wrong.append(correct + (wrong.count == 0 ? 3 : -3))
             }
+            fallbackOffset += 3
         }
 
         return wrong

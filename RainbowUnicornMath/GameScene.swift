@@ -15,6 +15,12 @@ class GameScene: SKScene {
     private var currentProblem: MathProblem!
     private var isAnswered = false
 
+    // Exit button and dialog
+    private var exitButton: SKShapeNode!
+    private var dialogOverlay: SKShapeNode?
+    private var dialogBox: SKShapeNode?
+    private var isShowingDialog = false
+
     override func didMove(to view: SKView) {
         setupBackground()
         setupProgressLabel()
@@ -22,6 +28,7 @@ class GameScene: SKScene {
         setupQuestionArea()
         setupAnswerButtons()
         setupDecorations()
+        setupExitButton()
         loadNewQuestion()
     }
 
@@ -113,6 +120,29 @@ class GameScene: SKScene {
         }
     }
 
+    private func setupExitButton() {
+        // Small circular X button in upper right
+        let buttonSize: CGFloat = 36
+        exitButton = SKShapeNode(circleOfRadius: buttonSize / 2)
+        exitButton.fillColor = UIColor.white.withAlphaComponent(0.3)
+        exitButton.strokeColor = .white
+        exitButton.lineWidth = 2
+        exitButton.position = CGPoint(x: 40, y: size.height - 50)
+        exitButton.zPosition = 100
+        exitButton.name = "exitButton"
+        addChild(exitButton)
+
+        // X label
+        let xLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        xLabel.text = "✕"
+        xLabel.fontSize = 20
+        xLabel.fontColor = .white
+        xLabel.verticalAlignmentMode = .center
+        xLabel.horizontalAlignmentMode = .center
+        xLabel.zPosition = 101
+        exitButton.addChild(xLabel)
+    }
+
     private func loadNewQuestion() {
         isAnswered = false
         currentProblem = MathProblem.generate(for: GameState.shared.selectedLevel,
@@ -161,10 +191,36 @@ class GameScene: SKScene {
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard !isAnswered else { return }
         guard let touch = touches.first else { return }
         let location = touch.location(in: self)
 
+        // Handle dialog interactions
+        if isShowingDialog {
+            let nodesAtPoint = nodes(at: location)
+            for node in nodesAtPoint {
+                if node.name == "cancelButton" || node.parent?.name == "cancelButton" {
+                    dismissDialog()
+                    return
+                }
+                if node.name == "startOverButton" || node.parent?.name == "startOverButton" {
+                    returnToMenu()
+                    return
+                }
+            }
+            return // Block all other touches while dialog is showing
+        }
+
+        // Handle exit button tap
+        let nodesAtPoint = nodes(at: location)
+        for node in nodesAtPoint {
+            if node.name == "exitButton" || node.parent?.name == "exitButton" {
+                showExitConfirmationDialog()
+                return
+            }
+        }
+
+        // Handle answer buttons (only if not answered)
+        guard !isAnswered else { return }
         for button in answerButtons {
             if button.calculateAccumulatedFrame().contains(location) {
                 handleAnswer(selectedButton: button)
@@ -252,5 +308,100 @@ class GameScene: SKScene {
         resultsScene.scaleMode = .resizeFill
         let transition = SKTransition.fade(withDuration: 0.5)
         self.view?.presentScene(resultsScene, transition: transition)
+    }
+
+    // MARK: - Exit Dialog
+
+    private func showExitConfirmationDialog() {
+        isShowingDialog = true
+
+        // Semi-transparent overlay
+        dialogOverlay = SKShapeNode(rectOf: CGSize(width: size.width * 2, height: size.height * 2))
+        dialogOverlay?.fillColor = UIColor.black.withAlphaComponent(0.5)
+        dialogOverlay?.strokeColor = .clear
+        dialogOverlay?.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        dialogOverlay?.zPosition = 200
+        dialogOverlay?.name = "dialogOverlay"
+        addChild(dialogOverlay!)
+
+        // Dialog box
+        let boxSize = CGSize(width: 280, height: 180)
+        dialogBox = SKShapeNode(rectOf: boxSize, cornerRadius: 20)
+        dialogBox?.fillColor = .white
+        dialogBox?.strokeColor = RainbowColors.purple
+        dialogBox?.lineWidth = 3
+        dialogBox?.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        dialogBox?.zPosition = 210
+        addChild(dialogBox!)
+
+        // Title
+        let titleLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        titleLabel.text = "Start Over?"
+        titleLabel.fontSize = 24
+        titleLabel.fontColor = RainbowColors.purple
+        titleLabel.position = CGPoint(x: 0, y: 50)
+        titleLabel.zPosition = 211
+        dialogBox?.addChild(titleLabel)
+
+        // Message
+        let messageLabel = SKLabelNode(fontNamed: "AvenirNext-Regular")
+        messageLabel.text = "Your progress will be lost"
+        messageLabel.fontSize = 16
+        messageLabel.fontColor = .darkGray
+        messageLabel.position = CGPoint(x: 0, y: 15)
+        messageLabel.zPosition = 211
+        dialogBox?.addChild(messageLabel)
+
+        // Cancel button
+        let cancelButton = SKShapeNode(rectOf: CGSize(width: 100, height: 44), cornerRadius: 12)
+        cancelButton.fillColor = UIColor(white: 0.7, alpha: 1.0)
+        cancelButton.strokeColor = .white
+        cancelButton.lineWidth = 2
+        cancelButton.position = CGPoint(x: -60, y: -45)
+        cancelButton.zPosition = 211
+        cancelButton.name = "cancelButton"
+        dialogBox?.addChild(cancelButton)
+
+        let cancelLabel = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
+        cancelLabel.text = "Cancel"
+        cancelLabel.fontSize = 16
+        cancelLabel.fontColor = .white
+        cancelLabel.verticalAlignmentMode = .center
+        cancelLabel.zPosition = 212
+        cancelButton.addChild(cancelLabel)
+
+        // Start Over button
+        let startOverButton = SKShapeNode(rectOf: CGSize(width: 120, height: 44), cornerRadius: 12)
+        startOverButton.fillColor = RainbowColors.red
+        startOverButton.strokeColor = .white
+        startOverButton.lineWidth = 2
+        startOverButton.position = CGPoint(x: 60, y: -45)
+        startOverButton.zPosition = 211
+        startOverButton.name = "startOverButton"
+        dialogBox?.addChild(startOverButton)
+
+        let startOverLabel = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
+        startOverLabel.text = "Start Over"
+        startOverLabel.fontSize = 16
+        startOverLabel.fontColor = .white
+        startOverLabel.verticalAlignmentMode = .center
+        startOverLabel.zPosition = 212
+        startOverButton.addChild(startOverLabel)
+    }
+
+    private func dismissDialog() {
+        dialogOverlay?.removeFromParent()
+        dialogBox?.removeFromParent()
+        dialogOverlay = nil
+        dialogBox = nil
+        isShowingDialog = false
+    }
+
+    private func returnToMenu() {
+        GameState.shared.reset()
+        let menuScene = MenuScene(size: self.size)
+        menuScene.scaleMode = .resizeFill
+        let transition = SKTransition.fade(withDuration: 0.5)
+        self.view?.presentScene(menuScene, transition: transition)
     }
 }
