@@ -61,8 +61,8 @@ enum DifficultyLevel: CaseIterable {
 
     // Subtraction (3)
     case subSingleDigit        // 0-9 - 0-9, no negatives
-    case subTens               // 10-19 - 10-19, no negatives
-    case subTwoDigit           // 20-99 - 20-99, no negatives
+    case subTens               // 10-19 - 1-19, no negatives
+    case subTwoDigit           // 20-99 - 1-99, no negatives
 
     // Add & Subtract (3)
     case addSubSingleDigit     // 0-9 for all operands
@@ -78,9 +78,9 @@ enum DifficultyLevel: CaseIterable {
     case divLarger             // quotient 10-50, divisor 2-9
 
     // More Complex (2)
-    // Types: a×b−c, a×b+c, a÷b−c, a÷b+c
-    case complexSingleDigit    // 1-9 for all operands
-    case complexLarger         // larger ranges
+    // Types: a×b±c, a÷b±c
+    case complexSingleDigit    // 1-9 × 1-9 or ÷1-9, ±1-9
+    case complexLarger         // 10-99 × 2-9 or ÷2-9 (quotient 10-50), ±1-50
 
     var displayName: String {
         switch self {
@@ -205,11 +205,11 @@ struct MathProblem {
 
         // Subtraction
         case .subSingleDigit:
-            return generateSubtraction(range: 0...9)
+            return generateSubtraction(aRange: 0...9, bRange: 0...9)
         case .subTens:
-            return generateSubtraction(range: 10...19)
+            return generateSubtraction(aRange: 10...19, bRange: 1...19)
         case .subTwoDigit:
-            return generateSubtraction(range: 20...99)
+            return generateSubtraction(aRange: 20...99, bRange: 1...99)
 
         // Add & Subtract
         case .addSubSingleDigit:
@@ -233,9 +233,11 @@ struct MathProblem {
 
         // More Complex
         case .complexSingleDigit:
-            return generateMoreComplex(mulRange: 1...9, divQuotientRange: 1...9, addSubRange: 1...9)
+            // Same as single digit multiplication (1-9 × 1-9) and division (quotient 1-9, divisor 1-9)
+            return generateMoreComplex(mulARange: 1...9, mulBRange: 1...9, divQuotientRange: 1...9, divDivisorRange: 1...9, addSubRange: 1...9)
         case .complexLarger:
-            return generateMoreComplex(mulRange: 2...12, divQuotientRange: 2...12, addSubRange: 10...30)
+            // Same as mulTwoByOne (10-99 × 2-9) and divLarger (quotient 10-50, divisor 2-9)
+            return generateMoreComplex(mulARange: 10...99, mulBRange: 2...9, divQuotientRange: 10...50, divDivisorRange: 2...9, addSubRange: 1...50)
         }
     }
 
@@ -254,14 +256,13 @@ struct MathProblem {
         return MathProblem(a: a, b: b, c: nil, correctAnswer: correct, choices: allChoices, level: .addition, complexOp: nil)
     }
 
-    private static func generateSubtraction(range: ClosedRange<Int>) -> MathProblem {
+    private static func generateSubtraction(aRange: ClosedRange<Int>, bRange: ClosedRange<Int>) -> MathProblem {
         // Ensure a >= b so answer is non-negative
-        var a = Int.random(in: range)
-        var b = Int.random(in: range)
-        if b > a { swap(&a, &b) }
+        let a = Int.random(in: aRange)
+        let b = Int.random(in: 1...a)  // b must be <= a for non-negative result
         let correct = a - b
 
-        let wrongRange = range.count > 20 ? -20...20 : -6...6
+        let wrongRange = aRange.upperBound > 20 ? -20...20 : -6...6
         let wrongAnswers = generateWrongAnswers(correct: correct, range: wrongRange)
         var allChoices = [correct] + wrongAnswers
         allChoices.shuffle()
@@ -312,7 +313,7 @@ struct MathProblem {
         return MathProblem(a: dividend, b: divisor, c: nil, correctAnswer: quotient, choices: allChoices, level: .division, complexOp: nil)
     }
 
-    private static func generateMoreComplex(mulRange: ClosedRange<Int>, divQuotientRange: ClosedRange<Int>, addSubRange: ClosedRange<Int>) -> MathProblem {
+    private static func generateMoreComplex(mulARange: ClosedRange<Int>, mulBRange: ClosedRange<Int>, divQuotientRange: ClosedRange<Int>, divDivisorRange: ClosedRange<Int>, addSubRange: ClosedRange<Int>) -> MathProblem {
         let opType = ComplexOperationType.allCases.randomElement()!
 
         let a: Int
@@ -323,19 +324,15 @@ struct MathProblem {
         switch opType {
         case .multiplyAdd:
             // a × b + c
-            let mul1 = Int.random(in: mulRange)
-            let mul2 = Int.random(in: mulRange)
-            a = mul1
-            b = mul2
+            a = Int.random(in: mulARange)
+            b = Int.random(in: mulBRange)
             c = Int.random(in: addSubRange)
             correct = a * b + c
 
         case .multiplySubtract:
             // a × b − c, ensure non-negative result
-            let mul1 = Int.random(in: mulRange)
-            let mul2 = Int.random(in: mulRange)
-            a = mul1
-            b = mul2
+            a = Int.random(in: mulARange)
+            b = Int.random(in: mulBRange)
             let product = a * b
             c = Int.random(in: 1...max(1, product))
             correct = product - c
@@ -343,7 +340,7 @@ struct MathProblem {
         case .divideAdd:
             // a ÷ b + c (a is dividend, b is divisor)
             let quotient = Int.random(in: divQuotientRange)
-            let divisor = Int.random(in: 2...9)
+            let divisor = Int.random(in: divDivisorRange)
             a = quotient * divisor  // dividend
             b = divisor
             c = Int.random(in: addSubRange)
@@ -352,7 +349,7 @@ struct MathProblem {
         case .divideSubtract:
             // a ÷ b − c, ensure non-negative result
             let quotient = Int.random(in: divQuotientRange)
-            let divisor = Int.random(in: 2...9)
+            let divisor = Int.random(in: divDivisorRange)
             a = quotient * divisor  // dividend
             b = divisor
             c = Int.random(in: 1...max(1, quotient))
