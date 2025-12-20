@@ -145,7 +145,7 @@ class GameScene: SKScene {
 
     private func loadNewQuestion() {
         isAnswered = false
-        currentProblem = MathProblem.generate(for: GameState.shared.selectedLevel,
+        currentProblem = MathProblem.generate(for: GameState.shared.selectedDifficulty,
                                                usedProblems: &GameState.shared.usedProblems)
 
         // Update progress

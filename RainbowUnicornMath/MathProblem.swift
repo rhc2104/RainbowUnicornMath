@@ -11,6 +11,7 @@ enum MathLevel: Int, CaseIterable {
     case addSubtract = 3
     case multiplication = 4
     case division = 5
+    case moreComplex = 6
 
     var displayName: String {
         switch self {
@@ -19,6 +20,7 @@ enum MathLevel: Int, CaseIterable {
         case .addSubtract: return "Add & Subtract"
         case .multiplication: return "Multiplication"
         case .division: return "Division"
+        case .moreComplex: return "More Complex"
         }
     }
 
@@ -29,8 +31,87 @@ enum MathLevel: Int, CaseIterable {
         case .addSubtract: return "±"
         case .multiplication: return "×"
         case .division: return "÷"
+        case .moreComplex: return "⊛"
         }
     }
+
+    var difficulties: [DifficultyLevel] {
+        switch self {
+        case .addition:
+            return [.addSingleDigit, .addTens, .addTwoDigit]
+        case .subtraction:
+            return [.subSingleDigit, .subTens, .subTwoDigit]
+        case .addSubtract:
+            return [.addSubSingleDigit, .addSubTens, .addSubTwoDigit]
+        case .multiplication:
+            return [.mulSingleDigit, .mulTwoByOne]
+        case .division:
+            return [.divSingleDigit, .divLarger]
+        case .moreComplex:
+            return [.complexSingleDigit, .complexLarger]
+        }
+    }
+}
+
+enum DifficultyLevel: CaseIterable {
+    // Addition (3)
+    case addSingleDigit        // 0-9 + 0-9
+    case addTens               // 10-19 + 10-19
+    case addTwoDigit           // 20-99 + 20-99
+
+    // Subtraction (3)
+    case subSingleDigit        // 0-9 - 0-9, no negatives
+    case subTens               // 10-19 - 10-19, no negatives
+    case subTwoDigit           // 20-99 - 20-99, no negatives
+
+    // Add & Subtract (3)
+    case addSubSingleDigit     // 0-9 for all operands
+    case addSubTens            // 10-19 for all operands
+    case addSubTwoDigit        // 20-99 for all operands
+
+    // Multiplication (2)
+    case mulSingleDigit        // 1-9 × 1-9
+    case mulTwoByOne           // 10-99 × 2-9
+
+    // Division (2)
+    case divSingleDigit        // quotient 1-9, divisor 1-9
+    case divLarger             // quotient 10-50, divisor 2-9
+
+    // More Complex (2)
+    // Types: a×b−c, a×b+c, a÷b−c, a÷b+c
+    case complexSingleDigit    // 1-9 for all operands
+    case complexLarger         // larger ranges
+
+    var displayName: String {
+        switch self {
+        case .addSingleDigit, .subSingleDigit, .addSubSingleDigit:
+            return "Single Digit (0-9)"
+        case .addTens, .subTens, .addSubTens:
+            return "Teens (10-19)"
+        case .addTwoDigit, .subTwoDigit, .addSubTwoDigit:
+            return "Two-Digit (20-99)"
+        case .mulSingleDigit:
+            return "Single Digit (1-9)"
+        case .mulTwoByOne:
+            return "Two-Digit × Single"
+        case .divSingleDigit:
+            return "Single Digit (1-9)"
+        case .divLarger:
+            return "Larger Numbers"
+        case .complexSingleDigit:
+            return "Single Digit (1-9)"
+        case .complexLarger:
+            return "Larger Numbers"
+        }
+    }
+}
+
+/// For moreComplex level, tracks which operation pattern is used
+enum ComplexOperationType: CaseIterable {
+    case multiplyAdd    // a × b + c
+    case multiplySubtract // a × b − c
+    case divideAdd      // a ÷ b + c
+    case divideSubtract // a ÷ b − c
 }
 
 struct MathProblem {
@@ -40,19 +121,32 @@ struct MathProblem {
     let correctAnswer: Int
     let choices: [Int]
     let level: MathLevel
+    let complexOp: ComplexOperationType?  // Only used for moreComplex level
 
     var questionText: String {
         switch level {
         case .addition:
             return "\(a) + \(b) = ?"
         case .subtraction:
-            return "\(a) - \(b) = ?"
+            return "\(a) − \(b) = ?"
         case .addSubtract:
-            return "\(a) + \(b) - \(c!) = ?"
+            return "\(a) + \(b) − \(c!) = ?"
         case .multiplication:
             return "\(a) × \(b) = ?"
         case .division:
             return "\(a) ÷ \(b) = ?"
+        case .moreComplex:
+            guard let op = complexOp, let cVal = c else { return "? = ?" }
+            switch op {
+            case .multiplyAdd:
+                return "\(a) × \(b) + \(cVal) = ?"
+            case .multiplySubtract:
+                return "\(a) × \(b) − \(cVal) = ?"
+            case .divideAdd:
+                return "\(a) ÷ \(b) + \(cVal) = ?"
+            case .divideSubtract:
+                return "\(a) ÷ \(b) − \(cVal) = ?"
+            }
         }
     }
 
@@ -73,27 +167,19 @@ struct MathProblem {
             return "mul_\(sorted[0])_\(sorted[1])"
         case .division:
             return "div_\(a)_\(b)"
+        case .moreComplex:
+            guard let op = complexOp, let cVal = c else { return "complex_0_0_0" }
+            return "complex_\(op)_\(a)_\(b)_\(cVal)"
         }
     }
 
-    static func generate(for level: MathLevel, usedProblems: inout Set<String>) -> MathProblem {
+    /// Generate a problem for the given difficulty level
+    static func generate(for difficulty: DifficultyLevel, usedProblems: inout Set<String>) -> MathProblem {
         var attempts = 0
         let maxAttempts = 100
 
         while attempts < maxAttempts {
-            let problem: MathProblem
-            switch level {
-            case .addition:
-                problem = generateAddition()
-            case .subtraction:
-                problem = generateSubtraction()
-            case .addSubtract:
-                problem = generateAddSubtract()
-            case .multiplication:
-                problem = generateMultiplication()
-            case .division:
-                problem = generateDivision()
-            }
+            let problem = generateProblem(for: difficulty)
 
             if !usedProblems.contains(problem.uniqueKey) {
                 usedProblems.insert(problem.uniqueKey)
@@ -104,87 +190,181 @@ struct MathProblem {
         }
 
         // Fallback: return any problem if we can't find a unique one
-        // (shouldn't happen with 15 questions and large problem space)
-        switch level {
-        case .addition:
-            return generateAddition()
-        case .subtraction:
-            return generateSubtraction()
-        case .addSubtract:
-            return generateAddSubtract()
-        case .multiplication:
-            return generateMultiplication()
-        case .division:
-            return generateDivision()
+        return generateProblem(for: difficulty)
+    }
+
+    private static func generateProblem(for difficulty: DifficultyLevel) -> MathProblem {
+        switch difficulty {
+        // Addition
+        case .addSingleDigit:
+            return generateAddition(range: 0...9)
+        case .addTens:
+            return generateAddition(range: 10...19)
+        case .addTwoDigit:
+            return generateAddition(range: 20...99)
+
+        // Subtraction
+        case .subSingleDigit:
+            return generateSubtraction(range: 0...9)
+        case .subTens:
+            return generateSubtraction(range: 10...19)
+        case .subTwoDigit:
+            return generateSubtraction(range: 20...99)
+
+        // Add & Subtract
+        case .addSubSingleDigit:
+            return generateAddSubtract(range: 0...9)
+        case .addSubTens:
+            return generateAddSubtract(range: 10...19)
+        case .addSubTwoDigit:
+            return generateAddSubtract(range: 20...99)
+
+        // Multiplication
+        case .mulSingleDigit:
+            return generateMultiplication(aRange: 1...9, bRange: 1...9)
+        case .mulTwoByOne:
+            return generateMultiplication(aRange: 10...99, bRange: 2...9)
+
+        // Division
+        case .divSingleDigit:
+            return generateDivision(quotientRange: 1...9, divisorRange: 1...9)
+        case .divLarger:
+            return generateDivision(quotientRange: 10...50, divisorRange: 2...9)
+
+        // More Complex
+        case .complexSingleDigit:
+            return generateMoreComplex(mulRange: 1...9, divQuotientRange: 1...9, addSubRange: 1...9)
+        case .complexLarger:
+            return generateMoreComplex(mulRange: 2...12, divQuotientRange: 2...12, addSubRange: 10...30)
         }
     }
 
     // MARK: - Level-specific generation
 
-    private static func generateAddition() -> MathProblem {
-        let a = Int.random(in: 0...9)
-        let b = Int.random(in: 0...9)
+    private static func generateAddition(range: ClosedRange<Int>) -> MathProblem {
+        let a = Int.random(in: range)
+        let b = Int.random(in: range)
         let correct = a + b
 
-        let wrongAnswers = generateWrongAnswers(correct: correct, range: -6...6)
+        let wrongRange = range.count > 20 ? -20...20 : -6...6
+        let wrongAnswers = generateWrongAnswers(correct: correct, range: wrongRange)
         var allChoices = [correct] + wrongAnswers
         allChoices.shuffle()
 
-        return MathProblem(a: a, b: b, c: nil, correctAnswer: correct, choices: allChoices, level: .addition)
+        return MathProblem(a: a, b: b, c: nil, correctAnswer: correct, choices: allChoices, level: .addition, complexOp: nil)
     }
 
-    private static func generateSubtraction() -> MathProblem {
+    private static func generateSubtraction(range: ClosedRange<Int>) -> MathProblem {
         // Ensure a >= b so answer is non-negative
-        let a = Int.random(in: 0...9)
-        let b = Int.random(in: 0...a)
+        var a = Int.random(in: range)
+        var b = Int.random(in: range)
+        if b > a { swap(&a, &b) }
         let correct = a - b
 
-        let wrongAnswers = generateWrongAnswers(correct: correct, range: -6...6)
+        let wrongRange = range.count > 20 ? -20...20 : -6...6
+        let wrongAnswers = generateWrongAnswers(correct: correct, range: wrongRange)
         var allChoices = [correct] + wrongAnswers
         allChoices.shuffle()
 
-        return MathProblem(a: a, b: b, c: nil, correctAnswer: correct, choices: allChoices, level: .subtraction)
+        return MathProblem(a: a, b: b, c: nil, correctAnswer: correct, choices: allChoices, level: .subtraction, complexOp: nil)
     }
 
-    private static func generateAddSubtract() -> MathProblem {
-        let a = Int.random(in: 0...9)
-        let b = Int.random(in: 0...9)
+    private static func generateAddSubtract(range: ClosedRange<Int>) -> MathProblem {
+        let a = Int.random(in: range)
+        let b = Int.random(in: range)
         // Ensure c <= a + b so the answer is non-negative
         let maxC = a + b
         let c = maxC > 0 ? Int.random(in: 0...maxC) : 0
         let correct = a + b - c
 
-        let wrongAnswers = generateWrongAnswers(correct: correct, range: -9...9)
+        let wrongRange = range.count > 20 ? -20...20 : -9...9
+        let wrongAnswers = generateWrongAnswers(correct: correct, range: wrongRange)
         var allChoices = [correct] + wrongAnswers
         allChoices.shuffle()
 
-        return MathProblem(a: a, b: b, c: c, correctAnswer: correct, choices: allChoices, level: .addSubtract)
+        return MathProblem(a: a, b: b, c: c, correctAnswer: correct, choices: allChoices, level: .addSubtract, complexOp: nil)
     }
 
-    private static func generateMultiplication() -> MathProblem {
-        // Use 1-9 to avoid trivial 0 multiplications
-        let a = Int.random(in: 1...9)
-        let b = Int.random(in: 1...9)
+    private static func generateMultiplication(aRange: ClosedRange<Int>, bRange: ClosedRange<Int>) -> MathProblem {
+        let a = Int.random(in: aRange)
+        let b = Int.random(in: bRange)
         let correct = a * b
 
-        let wrongAnswers = generateWrongAnswers(correct: correct, range: -15...15)
+        let wrongRange = correct > 50 ? -30...30 : -15...15
+        let wrongAnswers = generateWrongAnswers(correct: correct, range: wrongRange)
         var allChoices = [correct] + wrongAnswers
         allChoices.shuffle()
 
-        return MathProblem(a: a, b: b, c: nil, correctAnswer: correct, choices: allChoices, level: .multiplication)
+        return MathProblem(a: a, b: b, c: nil, correctAnswer: correct, choices: allChoices, level: .multiplication, complexOp: nil)
     }
 
-    private static func generateDivision() -> MathProblem {
+    private static func generateDivision(quotientRange: ClosedRange<Int>, divisorRange: ClosedRange<Int>) -> MathProblem {
         // Generate clean division: pick quotient and divisor, calculate dividend
-        let quotient = Int.random(in: 1...9)
-        let divisor = Int.random(in: 1...9)
+        let quotient = Int.random(in: quotientRange)
+        let divisor = Int.random(in: divisorRange)
         let dividend = quotient * divisor
 
-        let wrongAnswers = generateWrongAnswers(correct: quotient, range: -6...6)
+        let wrongRange = quotientRange.upperBound > 20 ? -15...15 : -6...6
+        let wrongAnswers = generateWrongAnswers(correct: quotient, range: wrongRange)
         var allChoices = [quotient] + wrongAnswers
         allChoices.shuffle()
 
-        return MathProblem(a: dividend, b: divisor, c: nil, correctAnswer: quotient, choices: allChoices, level: .division)
+        return MathProblem(a: dividend, b: divisor, c: nil, correctAnswer: quotient, choices: allChoices, level: .division, complexOp: nil)
+    }
+
+    private static func generateMoreComplex(mulRange: ClosedRange<Int>, divQuotientRange: ClosedRange<Int>, addSubRange: ClosedRange<Int>) -> MathProblem {
+        let opType = ComplexOperationType.allCases.randomElement()!
+
+        let a: Int
+        let b: Int
+        let c: Int
+        let correct: Int
+
+        switch opType {
+        case .multiplyAdd:
+            // a × b + c
+            let mul1 = Int.random(in: mulRange)
+            let mul2 = Int.random(in: mulRange)
+            a = mul1
+            b = mul2
+            c = Int.random(in: addSubRange)
+            correct = a * b + c
+
+        case .multiplySubtract:
+            // a × b − c, ensure non-negative result
+            let mul1 = Int.random(in: mulRange)
+            let mul2 = Int.random(in: mulRange)
+            a = mul1
+            b = mul2
+            let product = a * b
+            c = Int.random(in: 1...max(1, product))
+            correct = product - c
+
+        case .divideAdd:
+            // a ÷ b + c (a is dividend, b is divisor)
+            let quotient = Int.random(in: divQuotientRange)
+            let divisor = Int.random(in: 2...9)
+            a = quotient * divisor  // dividend
+            b = divisor
+            c = Int.random(in: addSubRange)
+            correct = quotient + c
+
+        case .divideSubtract:
+            // a ÷ b − c, ensure non-negative result
+            let quotient = Int.random(in: divQuotientRange)
+            let divisor = Int.random(in: 2...9)
+            a = quotient * divisor  // dividend
+            b = divisor
+            c = Int.random(in: 1...max(1, quotient))
+            correct = quotient - c
+        }
+
+        let wrongRange = correct > 50 ? -30...30 : -15...15
+        let wrongAnswers = generateWrongAnswers(correct: correct, range: wrongRange)
+        var allChoices = [correct] + wrongAnswers
+        allChoices.shuffle()
+
+        return MathProblem(a: a, b: b, c: c, correctAnswer: correct, choices: allChoices, level: .moreComplex, complexOp: opType)
     }
 
     // MARK: - Wrong answer generation

@@ -12,6 +12,7 @@ class GameState {
     private init() {}
 
     var selectedLevel: MathLevel = .addSubtract
+    var selectedDifficulty: DifficultyLevel = .addSubSingleDigit
     var currentQuestion: Int = 0
     var correctAnswers: Int = 0
     let totalQuestions: Int = 15
