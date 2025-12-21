@@ -143,6 +143,25 @@ class GameScene: SKScene {
         exitButton.addChild(xLabel)
     }
 
+    // MARK: - Font Scaling Helper
+
+    private func optimalFontSize(for text: String, maxWidth: CGFloat, baseSize: CGFloat, minSize: CGFloat) -> CGFloat {
+        var fontSize = baseSize
+        let testLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        testLabel.text = text
+        testLabel.fontSize = fontSize
+
+        // Reduce font size until text fits or we hit minimum
+        while testLabel.frame.width > maxWidth && fontSize > minSize {
+            fontSize -= 2
+            testLabel.fontSize = fontSize
+        }
+
+        return fontSize
+    }
+
+    // MARK: - Question Loading
+
     private func loadNewQuestion() {
         isAnswered = false
         currentProblem = MathProblem.generate(for: GameState.shared.selectedDifficulty,
@@ -151,7 +170,20 @@ class GameScene: SKScene {
         // Update progress
         progressLabel.text = GameState.shared.progressText
 
-        // Update question
+        // Calculate available width (background width minus padding)
+        let bgWidth = min(size.width * 0.85, 400)
+        let availableWidth = bgWidth - 40  // 20pt padding on each side
+
+        // Calculate optimal font size for this question
+        let baseFontSize: CGFloat = 44
+        let minFontSize: CGFloat = 28
+        let optimalSize = optimalFontSize(for: currentProblem.questionText,
+                                           maxWidth: availableWidth,
+                                           baseSize: baseFontSize,
+                                           minSize: minFontSize)
+
+        // Update question with optimal font size
+        questionLabel.fontSize = optimalSize
         questionLabel.text = currentProblem.questionText
 
         // Update answer buttons
